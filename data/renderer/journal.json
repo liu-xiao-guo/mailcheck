@@ -1,0 +1,15 @@
+{
+    "schema-version": 1,
+    "template": {
+        "category-layout": "vertical-journal",
+        "card-layout": "horizontal",
+        "card-size": "medium",
+        "collapsed-rows": 0
+    },
+    "components": {
+        "art": "image",
+        "title": "title",
+        "subtitle": "subtitle",
+        "summary": "summary"
+    }
+}

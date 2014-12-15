@@ -1,0 +1,12 @@
+{
+    "schema-version": 1,
+    "template": {
+        "category-layout": "carousel",
+        "card-size": "medium",
+        "overlay": true
+    },
+    "components": {
+        "title": "title",
+        "art": "image"
+    }
+}

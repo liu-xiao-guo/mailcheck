@@ -1,0 +1,14 @@
+{
+    "schema-version": 1,
+    "template": {
+        "category-layout": "grid",
+        "card-size": "large",
+        "overlay": true,
+        "collapsed-rows": 0
+    },
+    "components": {
+        "art": "image",
+        "title": "title",
+        "subtitle": "subtitle"
+    }
+}

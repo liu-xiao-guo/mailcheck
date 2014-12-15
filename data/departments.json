@@ -1,0 +1,57 @@
+[
+    {
+        "title": "顺丰",
+	"pinyin": "shunfeng",
+        "url": "http://www.kuaidi100.com/query?type=shunfeng&postid=%1"
+    },
+    {
+        "title": "全峰",
+	"pinyin": "quanfeng",
+        "url": "http://www.kuaidi100.com/query?type=quanfengkuaidi&postid=%1"
+    },
+    {
+        "title": "申通",
+	"pinyin": "shentong",
+        "url": "http://www.kuaidi100.com/query?type=shentong&postid=%1"
+    },
+    {
+        "title": "EMS",
+	"pinyin": "ems",
+        "url": "http://www.kuaidi100.com/query?type=ems&postid=%1"
+    },
+    {
+        "title": "圆通",
+	"pinyin": "yuantong",
+        "url": "http://www.kuaidi100.com/query?type=yuantong&postid=%1"
+    },
+    {
+        "title": "中通",
+	"pinyin": "zhongtong",
+        "url": "http://www.kuaidi100.com/query?type=zhongtong&postid=%1"
+    },
+    {
+        "title": "韵达",
+	"pinyin": "yunda",
+        "url": "http://www.kuaidi100.com/query?type=yunda&postid=%1"
+    },
+    {
+        "title": "天天",
+	"pinyin": "tiantian",
+        "url": "http://www.kuaidi100.com/query?type=tiantian&postid=%1"
+    },
+    {
+        "title": "汇通",
+	"pinyin": "huitong",
+        "url": "http://www.kuaidi100.com/query?type=huitongkuaidi&postid=%1"
+    },
+    {
+        "title": "德邦",
+	"pinyin": "debang",
+        "url": "http://www.kuaidi100.com/query?type=debangwuliu&postid=%1"
+    },
+    {
+        "title": "宅急送",
+ 	"pinyin": "zhaijisong",
+       	"url": "http://www.kuaidi100.com/query?type=zhaijisong&postid=%1"
+    }
+]
