@@ -30,6 +30,8 @@ using namespace api;
 using namespace scope;
 using namespace unity::scopes;
 
+auto frontPage = "http://www.kuaidi100.com/";
+
 QString m_scopePath;
 QString m_rootDepartmentId;
 QMap<QString, std::string> m_renders;
@@ -38,6 +40,23 @@ QString m_imageDefault;
 QString m_imageError;
 QMap<QString, QString> m_depts;
 QString m_curScopeId;
+
+std::string CAR_GRID = R"(
+{
+    "schema-version" : 1,
+        "template" : {
+        "category-layout" : "grid",
+        "card-size": "large",
+        "overlay": true
+        },
+    "components" : {
+        "title" : "category",
+        "art" : {
+        "field": "art2",
+        "aspect-ratio": 2.1
+    }
+  }
+})";
 
 #define qstr(s) QString::fromStdString(s)
 
@@ -165,6 +184,25 @@ void Query::getMailInfo(QByteArray &data, SearchReplyProxy const& reply) {
     if (e.error != QJsonParseError::NoError) {
         throw QString("Failed to parse response: %1").arg(e.errorString());
     }
+
+//    CategoryRenderer renderer(m_renders.value("hgrid", ""));
+//    auto errors = reply->register_category("error", "", "", renderer);
+
+//    CategorisedResult result(errors);
+//    result["uri"] = HOME_URL.toStdString();
+//    result["title"] = ERROR.toStdString();
+//    result["subtitle"] = error.toStdString();
+//    result["image"] = m_imageError.toStdString();
+
+    CategoryRenderer rssCAR(CAR_GRID);
+    auto catCARR = reply->register_category("A", "", "", rssCAR);
+    CategorisedResult res_car(catCARR);
+    res_car.set_uri("frontPage");
+    QString defaultImage1 ="file://"+ m_scopePath + "/images/" + m_curScopeId + ".jpg";
+    qDebug() << "defaultImage1: "  << defaultImage1;
+    res_car["largepic"] = defaultImage1.toStdString();
+    res_car["art2"] =  res_car["largepic"];
+    reply->push(res_car);
 
     QJsonObject obj = document.object();
 
