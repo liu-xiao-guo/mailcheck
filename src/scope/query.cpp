@@ -32,14 +32,14 @@ using namespace unity::scopes;
 
 auto frontPage = "http://www.kuaidi100.com/";
 
-QString m_scopePath;
-QString m_rootDepartmentId;
-QMap<QString, std::string> m_renders;
-QString m_userAgent;
-QString m_imageDefault;
-QString m_imageError;
-QMap<QString, QString> m_depts;
-QString m_curScopeId;
+QString g_scopePath;
+QString g_rootDepartmentId;
+QMap<QString, std::string> g_renders;
+QString g_userAgent;
+QString g_imageDefault;
+QString g_imageError;
+QMap<QString, QString> g_depts;
+QString g_curScopeId;
 
 std::string CAR_GRID = R"(
 {
@@ -47,7 +47,8 @@ std::string CAR_GRID = R"(
         "template" : {
         "category-layout" : "grid",
         "card-size": "large",
-        "overlay": true
+        "overlay": true,
+        "non-interactive":"true"
         },
     "components" : {
         "title" : "category",
@@ -68,15 +69,15 @@ static QMap<QString, QString> DEPARTMENT_LAYOUTS {
 
 #define SET_RESULT(key, value) result[key] = value.toStdString()
 
-#define LOAD_RENDERER(which) m_renders.insert(which, getRenderer(m_scopePath, which))
+#define LOAD_RENDERER(which) g_renders.insert(which, getRenderer(g_scopePath, which))
 
 Query::Query(const sc::CannedQuery &query, const sc::SearchMetadata &metadata,
              QString scopePath, Config::Ptr config) :
     sc::SearchQueryBase(query, metadata), client_(config) {
-    m_scopePath = scopePath;
-    m_userAgent = QString("%1 (Ubuntu)").arg(SCOPE_PACKAGE);
-    m_imageDefault = QString("file://%1/images/%2").arg(scopePath).arg(IMG_DEFAULT);
-    m_imageError = QString("file://%1/images/%2").arg(scopePath).arg(IMG_ERROR);
+    g_scopePath = scopePath;
+    g_userAgent = QString("%1 (Ubuntu)").arg(SCOPE_PACKAGE);
+    g_imageDefault = QString("file://%1/images/%2").arg(scopePath).arg(IMG_DEFAULT);
+    g_imageError = QString("file://%1/images/%2").arg(scopePath).arg(IMG_ERROR);
 
     // You can comment out the renderers you don't use.
     LOAD_RENDERER("journal");
@@ -123,7 +124,7 @@ void Query::run(sc::SearchReplyProxy const& reply) {
 }
 
 void Query::search(sc::SearchReplyProxy const& reply) {
-    CategoryRenderer renderer(m_renders.value("journal", ""));
+    CategoryRenderer renderer(g_renders.value("journal", ""));
     auto search = reply->register_category(
                 "search", RESULTS.toStdString(), "", renderer);
 
@@ -132,40 +133,54 @@ void Query::search(sc::SearchReplyProxy const& reply) {
     QString deptId = QString::fromStdString(cannedQuery.department_id());
     qDebug() << "deptId: " << deptId;
 
-    qDebug() << "m_rootDepartmentId: " << m_rootDepartmentId;
+    qDebug() << "m_rootDepartmentId: " << g_rootDepartmentId;
     QString url;
 
-    qDebug() << "m_curScopeId: " << m_curScopeId;
+    qDebug() << "m_curScopeId: " << g_curScopeId;
 
     if ( !deptId.isEmpty() ) {
-        m_curScopeId = deptId;
+        g_curScopeId = deptId;
     }
 
-    if ( deptId.isEmpty() && !m_rootDepartmentId.isEmpty()
-         && m_curScopeId == m_rootDepartmentId ) {
-        qDebug() << "Going to get the surfacing content";
-        url = QString(m_depts[m_rootDepartmentId]).arg(592833849048);
+    if ( deptId.isEmpty() && !g_rootDepartmentId.isEmpty()
+         && g_curScopeId == g_rootDepartmentId ) {
+
+        QMapIterator<QString, QString> i(g_depts);
+        qDebug() << "m_depts count: "  << g_depts.count();
+
+        qDebug() << "Going to set the surfacing content";
+
+        const CannedQuery &query(sc::SearchQueryBase::query());
+        // Trim the query string of whitespace
+        string query_string = alg::trim_copy(query.query_string());
+        QString queryString = QString::fromStdString(query_string);
+
+        if ( queryString.isEmpty()) {
+            url = QString(g_depts[g_rootDepartmentId]).arg(592833849048);
+        } else {
+            url = QString(g_depts[g_rootDepartmentId]).arg(queryString);
+        }
     } else {
         QString queryString = QString::fromStdString(cannedQuery.query_string());
         qDebug() << "queryString: " << queryString;
 
-        qDebug() << "m_curScopeId1: " << m_curScopeId;
+        qDebug() << "m_curScopeId1: " << g_curScopeId;
         qDebug() << "it comes here!";
 
         // Dump the departments. The map has been sorted out
-        QMapIterator<QString, QString> i(m_depts);
-        qDebug() << "m_depts count: "  << m_depts.count();
+        QMapIterator<QString, QString> i(g_depts);
+        qDebug() << "m_depts count: "  << g_depts.count();
 
         while (i.hasNext()) {
             i.next();
             qDebug() << "scope id: " << i.key() << ": " << i.value();
         }
 
-        url = m_depts[m_curScopeId].arg(queryString);
+        url = g_depts[g_curScopeId].arg(queryString);
     }
 
     qDebug() << "url: "  << url;
-    qDebug() << "m_curScopeId: " << m_curScopeId;
+    qDebug() << "m_curScopeId: " << g_curScopeId;
 
     try {
         QByteArray data = get(reply, QUrl(url));
@@ -198,7 +213,7 @@ void Query::getMailInfo(QByteArray &data, SearchReplyProxy const& reply) {
     auto catCARR = reply->register_category("A", "", "", rssCAR);
     CategorisedResult res_car(catCARR);
     res_car.set_uri("frontPage");
-    QString defaultImage1 ="file://"+ m_scopePath + "/images/" + m_curScopeId + ".jpg";
+    QString defaultImage1 ="file://"+ g_scopePath + "/images/" + g_curScopeId + ".jpg";
     qDebug() << "defaultImage1: "  << defaultImage1;
     res_car["largepic"] = defaultImage1.toStdString();
     res_car["art2"] =  res_car["largepic"];
@@ -224,13 +239,20 @@ void Query::getMailInfo(QByteArray &data, SearchReplyProxy const& reply) {
         CannedQuery query = SearchQueryBase::query();
         QString queryString = qstr(query.query_string());
         QString department = qstr(query.department_id());
+        qDebug() << "department: " << department;
         QString layout = DEPARTMENT_LAYOUTS.value(department);
         std::string renderTemplate;
 
-        if (m_renders.contains(layout))
-            renderTemplate = m_renders.value(layout, "");
-        else
-            renderTemplate = m_renders.value("journal");
+        if (g_renders.contains(layout)) {
+            qDebug() << "it has layout: " << layout;
+            renderTemplate = g_renders.value(layout, "");
+            // qDebug() << "renderTemplate: " << QString::fromStdString(renderTemplate);
+        }
+        else {
+            qDebug() << "it does not have layout!";
+            renderTemplate = g_renders.value("journal");
+            // qDebug() << "renderTemplate: " << QString::fromStdString(renderTemplate);
+        }
 
         CategoryRenderer grid(renderTemplate);
         std::string categoryId = "root";
@@ -248,7 +270,7 @@ void Query::getMailInfo(QByteArray &data, SearchReplyProxy const& reply) {
 //            qDebug() << "context: " << context;
 
             QString link = "http://www.kuaidi100.com/";
-            QString defaultImage ="file://"+ m_scopePath + "/images/" + m_curScopeId + ".jpg";
+            QString defaultImage ="file://"+ g_scopePath + "/images/" + g_curScopeId + ".jpg";
 
             CategorisedResult result(tracking);
 
@@ -273,9 +295,9 @@ QByteArray Query::get(sc::SearchReplyProxy const& reply, QUrl url) const {
 }
 
 void Query::pushDepartments(unity::scopes::SearchReplyProxy const& reply) {
-    qDebug() << "mScopePath: "  << m_scopePath;
+    qDebug() << "mScopePath: "  << g_scopePath;
 
-    QString json = getDepartmentsData( m_scopePath );
+    QString json = getDepartmentsData( g_scopePath );
 
     QJsonDocument doc = QJsonDocument::fromJson( json.toUtf8() );
     if (doc.isNull()) {
@@ -307,11 +329,11 @@ Department::SPtr Query::getRootDepartment(DepartmentList &depts) {
     std::string id = top->id();
 
     // Idea: We could show last browsed department instead.
-    m_curScopeId =QString::fromStdString(id);
-    qDebug() << "Init m_curScopeId: " << m_curScopeId;
+    g_curScopeId =QString::fromStdString(id);
+    qDebug() << "Init m_curScopeId: " << g_curScopeId;
 
-    m_rootDepartmentId = QString::fromStdString(id);
-    qDebug() <<  "Init m_rootDepartmentId: " << m_rootDepartmentId;
+    g_rootDepartmentId = QString::fromStdString(id);
+    qDebug() <<  "Init m_rootDepartmentId: " << g_rootDepartmentId;
 
     CannedQuery topQuery(SCOPENAME.toStdString());
     topQuery.set_department_id(id);
@@ -344,7 +366,7 @@ DepartmentList Query::getDepartments(QJsonArray data) {
     DepartmentList depts;
 
     // Clear the previous departments since the URL may change according to settings
-    m_depts.clear();
+    g_depts.clear();
     qDebug() << "m_depts is being cleared....!";
 
     int index = 0;
@@ -366,7 +388,7 @@ DepartmentList Query::getDepartments(QJsonArray data) {
         }
 
         // save the depart
-        m_depts.insert( pinyin, url );
+        g_depts.insert( pinyin, url );
 
         DEPARTMENT_LAYOUTS.insert(url, layout);
 
@@ -399,7 +421,7 @@ DepartmentList Query::getDepartments(QJsonArray data) {
     }
 
     // Dump the departments. The map has been sorted out
-    QMapIterator<QString, QString> i(m_depts);
+    QMapIterator<QString, QString> i(g_depts);
     while (i.hasNext()) {
         i.next();
         qDebug() << "scope id: " << i.key() << ": " << i.value();
@@ -423,11 +445,11 @@ QByteArray Query::makeRequest(SearchReplyProxy const& reply,QNetworkRequest &req
     QNetworkAccessManager manager;
     QByteArray response;
     QNetworkDiskCache *cache = new QNetworkDiskCache();
-    QString cachePath = m_scopePath + "/cache";
+    QString cachePath = g_scopePath + "/cache";
     //qDebug() << "Cache dir: " << cachePath;
     cache->setCacheDirectory(cachePath);
 
-    request.setRawHeader("User-Agent", m_userAgent.toStdString().c_str());
+    request.setRawHeader("User-Agent", g_userAgent.toStdString().c_str());
     request.setRawHeader("Content-Type", "application/rss+xml, text/xml");
     request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
 
@@ -454,13 +476,13 @@ QByteArray Query::makeRequest(SearchReplyProxy const& reply,QNetworkRequest &req
 }
 
 void Query::pushError(SearchReplyProxy const& reply, QString error) {
-    CategoryRenderer renderer(m_renders.value("hgrid", ""));
+    CategoryRenderer renderer(g_renders.value("hgrid", ""));
     auto errors = reply->register_category("error", "", "", renderer);
 
     CategorisedResult result(errors);
     result["uri"] = HOME_URL.toStdString();
     result["title"] = ERROR.toStdString();
     result["subtitle"] = error.toStdString();
-    result["image"] = m_imageError.toStdString();
+    result["image"] = g_imageError.toStdString();
     reply->push(result);
 }
